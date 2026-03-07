@@ -1,21 +1,11 @@
-const nodemailer = require('nodemailer');
+const SibApiV3Sdk = require('@getbrevo/brevo');
 
-const port = parseInt(process.env.EMAIL_PORT) || 587;
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+apiInstance.setApiKey(
+  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
-const transporter = nodemailer.createTransport({
-  host:   process.env.EMAIL_HOST,
-  port:   port,
-  secure: port === 465, // Must be true for port 465, false for others
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-// ════════════════════════════════════════
-// Send OTP Email — used for both
-// email signup verification and google verify
-// ════════════════════════════════════════
 const sendOTPEmail = async (email, name, otp, purpose) => {
   const purposeText = {
     email_verify:  'verify your email address',
@@ -23,34 +13,20 @@ const sendOTPEmail = async (email, name, otp, purpose) => {
     forgot:        'reset your password',
   }[purpose] || 'verify your account';
 
-  await transporter.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      email,
+  const sendSmtpEmail = {
+    to:      [{ email, name }],
+    sender:  { email: 'ahmedazeemmemon@gmail.com', name: 'AutoSilence' },
     subject: `AutoSilence — Your verification code is ${otp}`,
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;
                   background: #f8f9fb; padding: 32px; border-radius: 16px;">
-
-        <!-- Header -->
-        <div style="text-align: center; margin-bottom: 24px;">
-          <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #06b6d4);
-                      padding: 16px 20px; border-radius: 16px; font-size: 28px;">
-            🔕
-          </div>
-          <h2 style="color: #0f172a; margin: 12px 0 4px;">AutoSilence</h2>
-        </div>
-
-        <p style="color: #0f172a; font-size: 16px; margin-bottom: 6px;">
-          Hi <strong>${name}</strong>,
-        </p>
+        <h2 style="color: #0f172a; text-align: center;">AutoSilence</h2>
+        <p style="color: #0f172a; font-size: 16px;">Hi <strong>${name}</strong>,</p>
         <p style="color: #64748b; margin-bottom: 28px;">
-          Use the code below to ${purposeText}. This code expires in <strong>10 minutes</strong>.
+          Use the code below to ${purposeText}. Expires in <strong>10 minutes</strong>.
         </p>
-
-        <!-- OTP Box -->
         <div style="background: #ffffff; border: 2px solid #e2e8f0;
-                    border-radius: 16px; padding: 32px; text-align: center;
-                    margin-bottom: 24px;">
+                    border-radius: 16px; padding: 32px; text-align: center;">
           <p style="color: #64748b; font-size: 13px; margin: 0 0 12px;">
             Your verification code
           </p>
@@ -62,48 +38,49 @@ const sendOTPEmail = async (email, name, otp, purpose) => {
             Expires in 10 minutes
           </p>
         </div>
-
-        <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-          If you didn't request this, please ignore this email.<br/>
-          Never share this code with anyone.
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-        <p style="color: #cbd5e1; font-size: 11px; text-align: center; margin: 0;">
-          AutoSilence · Your smart silence scheduler
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 24px;">
+          If you didn't request this, please ignore this email.
         </p>
       </div>
     `,
-  });
+  };
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
 
-// ════════════════════════════════════════
-// Send Password Reset Email (link based)
-// ════════════════════════════════════════
 const sendPasswordResetEmail = async (email, name, resetToken) => {
   const webUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-  await transporter.sendMail({
-    from:    process.env.EMAIL_FROM,
-    to:      email,
+  const sendSmtpEmail = {
+    to:      [{ email, name }],
+    sender:  { email: 'ahmedazeemmemon@gmail.com', name: 'AutoSilence' },
     subject: 'AutoSilence — Reset Your Password',
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;
                   background: #f8f9fb; padding: 32px; border-radius: 16px;">
         <h2 style="color: #0f172a;">Reset Your Password</h2>
-        <p style="color: #64748b;">Hi ${name}, click the button below to reset your password.</p>
+        <p style="color: #64748b;">Hi ${name}, click below to reset your password.</p>
         <a href="${webUrl}"
-           style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #06b6d4);
+           style="display: inline-block; background: #1d4ed8;
                   color: white; padding: 14px 28px; border-radius: 12px;
                   text-decoration: none; font-weight: bold; margin: 16px 0;">
           Reset Password
         </a>
         <p style="color: #94a3b8; font-size: 12px;">
-          This link expires in 10 minutes. If you didn't request this, ignore this email.
+          This link expires in 10 minutes.
         </p>
       </div>
     `,
-  });
+  };
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
 
 module.exports = { sendOTPEmail, sendPasswordResetEmail };
+```
+
+---
+
+**Step 4 — Add to Railway variables**
+```
+BREVO_API_KEY = your_api_key_from_brevo
