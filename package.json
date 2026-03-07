@@ -17,9 +17,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "nodemailer": "^6.9.7",
-    "apple-signin-auth": "^1.7.3",
-    "@getbrevo/brevo": "^2.0.0"
-  },
+    "apple-signin-auth": "^1.7.3"
+    },
   "devDependencies": {
     "nodemon": "^3.0.2"
   }
