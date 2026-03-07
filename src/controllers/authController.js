@@ -142,7 +142,8 @@ const verifyOTP = async (req, res) => {
         : 'OTP verified successfully.',
       ...authResponse(user, token),
     });
-  } catch (error) {
+    } catch (error) {
+    console.error('Registration Error:', error); // ADD THIS LINE
     res.status(500).json({ success: false, message: error.message });
   }
 };
