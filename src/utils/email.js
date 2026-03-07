@@ -1,10 +1,9 @@
-const SibApiV3Sdk = require('@getbrevo/brevo');
+const Brevo = require('@getbrevo/brevo');
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-apiInstance.setApiKey(
-  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
+const client = Brevo.ApiClient.instance;
+client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+
+const apiInstance = new Brevo.TransactionalEmailsApi();
 
 // ════════════════════════════════════════
 // Send OTP Email
@@ -16,11 +15,12 @@ const sendOTPEmail = async (email, name, otp, purpose) => {
     forgot:        'reset your password',
   }[purpose] || 'verify your account';
 
-  const sendSmtpEmail = {
-    to:      [{ email, name }],
-    sender:  { email: process.env.EMAIL_USER, name: 'AutoSilence' },
-    subject: `AutoSilence — Your verification code is ${otp}`,
-    htmlContent: `
+  const sendSmtpEmail = new Brevo.SendSmtpEmail();
+
+  sendSmtpEmail.to      = [{ email, name }];
+  sendSmtpEmail.sender  = { email: process.env.EMAIL_USER, name: 'AutoSilence' };
+  sendSmtpEmail.subject = `AutoSilence — Your verification code is ${otp}`;
+  sendSmtpEmail.htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;
                   background: #f8f9fb; padding: 32px; border-radius: 16px;">
 
@@ -60,8 +60,7 @@ const sendOTPEmail = async (email, name, otp, purpose) => {
           AutoSilence · Your smart silence scheduler
         </p>
       </div>
-    `,
-  };
+    `;
 
   await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
@@ -72,11 +71,12 @@ const sendOTPEmail = async (email, name, otp, purpose) => {
 const sendPasswordResetEmail = async (email, name, resetToken) => {
   const webUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-  const sendSmtpEmail = {
-    to:      [{ email, name }],
-    sender:  { email: process.env.EMAIL_USER, name: 'AutoSilence' },
-    subject: 'AutoSilence — Reset Your Password',
-    htmlContent: `
+  const sendSmtpEmail = new Brevo.SendSmtpEmail();
+
+  sendSmtpEmail.to      = [{ email, name }];
+  sendSmtpEmail.sender  = { email: process.env.EMAIL_USER, name: 'AutoSilence' };
+  sendSmtpEmail.subject = 'AutoSilence — Reset Your Password';
+  sendSmtpEmail.htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;
                   background: #f8f9fb; padding: 32px; border-radius: 16px;">
         <h2 style="color: #0f172a;">Reset Your Password</h2>
@@ -91,8 +91,7 @@ const sendPasswordResetEmail = async (email, name, resetToken) => {
           This link expires in 10 minutes. If you didn't request this, ignore this email.
         </p>
       </div>
-    `,
-  };
+    `;
 
   await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
